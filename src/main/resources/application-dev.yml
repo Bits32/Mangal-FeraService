@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: mangalfera
+  datasource:
+    url: jdbc:postgresql://localhost:5432/mangalfera
+    username: postgres
+    password: sa123
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+server:
+  port: 8080
