@@ -3,7 +3,9 @@ package com.example.mangalfera.service;
 import com.example.mangalfera.Mapper.ProfileMapper;
 import com.example.mangalfera.dto.ProfileDTO;
 import com.example.mangalfera.model.Profile;
+import com.example.mangalfera.model.User;
 import com.example.mangalfera.repository.ProfileRepository;
+import com.example.mangalfera.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,9 +19,15 @@ public class ProfileServiceImpl implements ProfileService  {
     @Autowired
     private ProfileRepository profileRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @Override
     public ProfileDTO createProfile(ProfileDTO profileDTO) {
         Profile profile = ProfileMapper.toEntity(profileDTO);
+        User user = new User();
+        user.setId(1L);
+        profile.setUser(user);
         Profile savedProfile = profileRepository.save(profile);
         return ProfileMapper.toDTO(savedProfile);
     }
@@ -28,9 +36,13 @@ public class ProfileServiceImpl implements ProfileService  {
     public ProfileDTO updateProfile(Long id, ProfileDTO profileDTO) {
         Optional<Profile> existing = profileRepository.findById(id);
         if (existing.isPresent()) {
-            Profile profile = ProfileMapper.toEntity(profileDTO);
-            profile.setId(id);
-            Profile updatedProfile = profileRepository.save(profile);
+            Profile updatedData  = ProfileMapper.toEntity(profileDTO);
+            updatedData.setId(id);
+            Long userId = profileDTO.getUserId();
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+            updatedData.setUser(user);
+            Profile updatedProfile = profileRepository.save(updatedData);
             return ProfileMapper.toDTO(updatedProfile);
         } else {
             throw new RuntimeException("Profile not found with id: " + id);
@@ -38,10 +50,16 @@ public class ProfileServiceImpl implements ProfileService  {
     }
 
     @Override
-    public ProfileDTO getProfileById(Long id) {
+    public ProfileDTO getProfileById(Long  id) {
         Profile profile = profileRepository.findById(id).orElseThrow(() -> new RuntimeException("Profile not found"));
         return ProfileMapper.toDTO(profile);
     }
+
+//    @Override
+//    public ProfileDTO getProfileById(String email) {
+//        Profile profile = profileRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("Profile not found"));
+//        return ProfileMapper.toDTO(profile);
+//    }
 
     @Override
     public List<ProfileDTO> getAllProfiles() {

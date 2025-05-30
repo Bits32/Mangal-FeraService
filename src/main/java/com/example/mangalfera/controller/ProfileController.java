@@ -33,6 +33,12 @@ public class ProfileController {
         return ResponseEntity.ok(profileDTO);
     }
 
+//    @GetMapping("/{email}")
+//    public ResponseEntity<ProfileDTO> getProfileById(@PathVariable String email) {
+//        ProfileDTO profileDTO = profileService.getProfileById(email);
+//        return ResponseEntity.ok(profileDTO);
+//    }
+
     @GetMapping
     public ResponseEntity<List<ProfileDTO>> getAllProfiles() {
         List<ProfileDTO> profiles = profileService.getAllProfiles();
