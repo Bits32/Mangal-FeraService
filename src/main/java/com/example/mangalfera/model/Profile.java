@@ -1,5 +1,6 @@
 package com.example.mangalfera.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
@@ -23,7 +24,10 @@ public class Profile {
     // Basic Details
     private String name;
     private String gender;
+
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate dateOfBirth;
+
     private Integer heightInCm;
     private Integer weightInKg;
     private String bloodGroup;

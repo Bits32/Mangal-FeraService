@@ -6,6 +6,7 @@ import com.example.mangalfera.model.Profile;
 import com.example.mangalfera.model.User;
 import com.example.mangalfera.repository.ProfileRepository;
 import com.example.mangalfera.repository.UserRepository;
+import com.example.mangalfera.security.LoggedInUserUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,11 +23,15 @@ public class ProfileServiceImpl implements ProfileService  {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private UserService userService;
+
     @Override
     public ProfileDTO createProfile(ProfileDTO profileDTO) {
         Profile profile = ProfileMapper.toEntity(profileDTO);
-        User user = new User();
-        user.setId(1L);
+        User user = userService.getUserByEmail(LoggedInUserUtil.getLoggedInEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setId(user.getId());
         profile.setUser(user);
         Profile savedProfile = profileRepository.save(profile);
         return ProfileMapper.toDTO(savedProfile);
@@ -55,11 +60,11 @@ public class ProfileServiceImpl implements ProfileService  {
         return ProfileMapper.toDTO(profile);
     }
 
-//    @Override
-//    public ProfileDTO getProfileById(String email) {
-//        Profile profile = profileRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("Profile not found"));
-//        return ProfileMapper.toDTO(profile);
-//    }
+    @Override
+    public ProfileDTO getUserById(Long id) {
+        Profile profile = profileRepository.findByUserId(id).orElseThrow(() -> new RuntimeException("Profile not found"));
+        return ProfileMapper.toDTO(profile);
+    }
 
     @Override
     public List<ProfileDTO> getAllProfiles() {
