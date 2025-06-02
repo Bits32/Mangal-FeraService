@@ -10,7 +10,9 @@ public class ProfileMapper {
 
         dto.setId(profile.getId());
         dto.setUserId(profile.getUser().getId());
-        dto.setName(profile.getName());
+        dto.setFirstName(profile.getFirstName());
+        dto.setMiddleName(profile.getMiddleName());
+        dto.setLastName(profile.getLastName());
         dto.setGender(profile.getGender());
         dto.setDateOfBirth(profile.getDateOfBirth());
         dto.setHeightInCm(profile.getHeightInCm());
@@ -35,7 +37,11 @@ public class ProfileMapper {
 
         dto.setComplexion(profile.getComplexion());
         dto.setBodyType(profile.getBodyType());
+
         dto.setPreferredContactTime(profile.getPreferredContactTime());
+        dto.setMobileNo(profile.getMobileNo());
+        dto.setWhatsappNo(profile.getWhatsappNo());
+        dto.setEmail(profile.getEmail());
 
         dto.setRashi(profile.getRashi());
         dto.setNakshatra(profile.getNakshatra());
@@ -62,7 +68,9 @@ public class ProfileMapper {
 
         profile.setId(dto.getId());
         // profile.setUser(...) -> Set in service after fetching User entity by ID
-        profile.setName(dto.getName());
+        profile.setFirstName(dto.getFirstName());
+        profile.setMiddleName(dto.getMiddleName());
+        profile.setLastName(dto.getLastName());
         profile.setGender(dto.getGender());
         profile.setDateOfBirth(dto.getDateOfBirth());
         profile.setHeightInCm(dto.getHeightInCm());
@@ -89,6 +97,9 @@ public class ProfileMapper {
         profile.setBodyType(dto.getBodyType());
 
         profile.setPreferredContactTime(dto.getPreferredContactTime());
+        profile.setMobileNo(dto.getMobileNo());
+        profile.setWhatsappNo(dto.getWhatsappNo());
+        profile.setEmail(dto.getEmail());
 
         profile.setRashi(dto.getRashi());
         profile.setNakshatra(dto.getNakshatra());

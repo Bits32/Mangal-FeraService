@@ -7,6 +7,7 @@ public class RegisterRequest {
     private String password;
     private String contactNumber;
     private String email;
+    private String profileCreatedFor;
 
     public String getFirstName() {
         return firstName;
@@ -56,4 +57,11 @@ public class RegisterRequest {
         this.email = email;
     }
 
- }
+    public String getProfileCreatedFor() {
+        return profileCreatedFor;
+    }
+
+    public void setProfileCreatedFor(String profileCreatedFor) {
+        this.profileCreatedFor = profileCreatedFor;
+    }
+}

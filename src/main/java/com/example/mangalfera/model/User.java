@@ -16,6 +16,7 @@ public class User {
     private String contactNumber;
     private String email;
     private String role;
+    private String profileCreatedFor;
 
     public Long getId() {
         return id;
@@ -79,5 +80,13 @@ public class User {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public String getProfileCreatedFor() {
+        return profileCreatedFor;
+    }
+
+    public void setProfileCreatedFor(String profileCreatedFor) {
+        this.profileCreatedFor = profileCreatedFor;
     }
 }

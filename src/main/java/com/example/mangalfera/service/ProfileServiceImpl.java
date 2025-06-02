@@ -10,6 +10,8 @@ import com.example.mangalfera.security.LoggedInUserUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -33,6 +35,8 @@ public class ProfileServiceImpl implements ProfileService  {
                 .orElseThrow(() -> new RuntimeException("User not found"));
         user.setId(user.getId());
         profile.setUser(user);
+        profile.setCreatedBy(LoggedInUserUtil.getLoggedInEmail());
+        profile.setCreatedDate(new Date());
         Profile savedProfile = profileRepository.save(profile);
         return ProfileMapper.toDTO(savedProfile);
     }
@@ -47,6 +51,8 @@ public class ProfileServiceImpl implements ProfileService  {
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
             updatedData.setUser(user);
+            updatedData.setUpdatedBy(LoggedInUserUtil.getLoggedInEmail());
+            updatedData.setUpdatedData(new Date());
             Profile updatedProfile = profileRepository.save(updatedData);
             return ProfileMapper.toDTO(updatedProfile);
         } else {

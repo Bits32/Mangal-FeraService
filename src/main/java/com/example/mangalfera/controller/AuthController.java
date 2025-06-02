@@ -72,6 +72,7 @@ public class AuthController {
         user.setContactNumber(request.getContactNumber());
         user.setRole("User");
         user.setEmail(request.getEmail());
+        user.setProfileCreatedFor(request.getProfileCreatedFor());
         userService.registerUser(user);
         return "User registered successfully!";
     }

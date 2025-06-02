@@ -9,7 +9,9 @@ import java.util.Date;
 public class ProfileDTO {
     private Long id;
     private Long userId;
-    private String name;
+    private String firstName;
+    private String middleName;
+    private String lastName;
     private String gender;
     private LocalDate dateOfBirth;
     private Integer heightInCm;
@@ -36,6 +38,9 @@ public class ProfileDTO {
     private String bodyType;
 
     private String preferredContactTime;
+    private String mobileNo;
+    private String whatsappNo;
+    private String email;
 
     private String rashi;
     private String nakshatra;

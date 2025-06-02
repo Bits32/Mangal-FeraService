@@ -22,7 +22,9 @@ public class Profile {
     private User user;
 
     // Basic Details
-    private String name;
+    private String firstName;
+    private String middleName;
+    private String lastName;
     private String gender;
 
     @JsonFormat(pattern = "yyyy-MM-dd")
@@ -57,6 +59,9 @@ public class Profile {
 
     // Contact Preferences
     private String preferredContactTime;
+    private String mobileNo;
+    private String whatsappNo;
+    private String email;
 
     // Horoscope (Optional)
     private String rashi;
