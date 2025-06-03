@@ -12,4 +12,5 @@ public interface ProfileService {
     ProfileDTO getUserById(Long id);
 //    ProfileDTO getProfileById(String email);
     List<ProfileDTO> getAllProfiles();
+    List<ProfileDTO> getMatchedProfiles();
 }

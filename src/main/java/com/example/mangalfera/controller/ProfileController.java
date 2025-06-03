@@ -51,4 +51,11 @@ public class ProfileController {
         return ResponseEntity.ok(profiles);
     }
 
+    @GetMapping("/matchPartnerPreference")
+    public ResponseEntity<List<ProfileDTO>> getMatchedProfiles() {
+        List<ProfileDTO> matchedProfiles = profileService.getMatchedProfiles();
+        return ResponseEntity.ok(matchedProfiles);
+    }
+
+
 }
