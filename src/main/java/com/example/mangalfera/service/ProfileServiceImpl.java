@@ -86,82 +86,68 @@ public class ProfileServiceImpl implements ProfileService  {
 
     @Override
     public List<ProfileDTO> getMatchedProfiles() {
-        // 1. Get logged-in user's email
         String email = LoggedInUserUtil.getLoggedInEmail();
-
-        // 2. Get user
         User user = userService.getUserByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
 
-        // 3. Get user's partner preference
         PartnerPreferenceDTO preferenceDTO = partnerPreferenceService.getUserById(user.getId());
         if (preferenceDTO == null) {
             throw new RuntimeException("Partner preference not found for user: " + user.getId());
         }
 
-        // 4. Filter profiles (basic logic, you can refine it)
         List<Profile> allProfiles = profileRepository.findAll();
-        List<Profile> matchedProfiles = allProfiles.stream()
+        List<ProfileDTO> matchedProfiles = allProfiles.stream()
+                .filter(p -> !p.getUser().getId().equals(user.getId()))
                 .filter(p -> {
-                    if (p.getUser().getId().equals(user.getId())) return false; // skip self
+                    int total = 0;
+                    int matched = 0;
 
-                    boolean ageMatch = true;
-                    boolean heightMatch = true;
-                    boolean maritalMatch = true;
-                    boolean religionMatch = true;
-                    boolean casteMatch = true;
-                    boolean locationMatch = true;
-                    boolean manglikMatch = true;
-
-                    // Age check
-                    if (preferenceDTO.getAgeFrom() != null && preferenceDTO.getAgeFrom() != null && p.getDateOfBirth() != null) {
+                    if (preferenceDTO.getAgeFrom() != null && preferenceDTO.getAgeTo() != null && p.getDateOfBirth() != null) {
+                        total++;
                         int age = LocalDate.now().getYear() - p.getDateOfBirth().getYear();
-                        ageMatch = age >= preferenceDTO.getAgeFrom() && age <= preferenceDTO.getAgeTo();
+                        if (age >= preferenceDTO.getAgeFrom() && age <= preferenceDTO.getAgeTo()) matched++;
                     }
 
-                    // Height check
                     if (preferenceDTO.getHeightFrom() != null && preferenceDTO.getHeightTo() != null && p.getHeightInCm() != null) {
+                        total++;
                         try {
                             int heightFrom = Integer.parseInt(preferenceDTO.getHeightFrom());
                             int heightTo = Integer.parseInt(preferenceDTO.getHeightTo());
-                            heightMatch = p.getHeightInCm() >= heightFrom && p.getHeightInCm() <= heightTo;
-                        } catch (NumberFormatException e) {
-                            heightMatch = false;
-                        }
+                            if (p.getHeightInCm() >= heightFrom && p.getHeightInCm() <= heightTo) matched++;
+                        } catch (NumberFormatException e) {}
                     }
 
-                    // Marital Status
                     if (preferenceDTO.getMaritalStatus() != null) {
-                        maritalMatch = preferenceDTO.getMaritalStatus().equalsIgnoreCase(p.getMaritalStatus());
+                        total++;
+                        if (preferenceDTO.getMaritalStatus().equalsIgnoreCase(p.getMaritalStatus())) matched++;
                     }
 
-                    // Religion / Caste / Location
                     if (preferenceDTO.getReligion() != null) {
-                        religionMatch = preferenceDTO.getReligion().equalsIgnoreCase(p.getReligion());
+                        total++;
+                        if (preferenceDTO.getReligion().equalsIgnoreCase(p.getReligion())) matched++;
                     }
 
                     if (preferenceDTO.getCaste() != null) {
-                        casteMatch = preferenceDTO.getCaste().equalsIgnoreCase(p.getCaste());
+                        total++;
+                        if (preferenceDTO.getCaste().equalsIgnoreCase(p.getCaste())) matched++;
                     }
 
                     if (preferenceDTO.getCountry() != null) {
-                        locationMatch = preferenceDTO.getCountry().equalsIgnoreCase(p.getCountry());
+                        total++;
+                        if (preferenceDTO.getCountry().equalsIgnoreCase(p.getCountry())) matched++;
                     }
 
-                    // Manglik
                     if (preferenceDTO.getManglik() != null) {
-                        manglikMatch = preferenceDTO.getManglik().equalsIgnoreCase(p.getManglik());
+                        total++;
+                        if (preferenceDTO.getManglik().equalsIgnoreCase(p.getManglik())) matched++;
                     }
 
-                    return ageMatch && heightMatch && maritalMatch && religionMatch &&
-                            casteMatch && locationMatch && manglikMatch;
+                    double matchPercent = (total == 0) ? 0 : (matched * 100.0 / total);
+                    return matchPercent >= 60.0;
                 })
-                .collect(Collectors.toList());
-
-        return matchedProfiles.stream()
                 .map(ProfileMapper::toDTO)
                 .collect(Collectors.toList());
+
+        return matchedProfiles;
     }
-
-
 }
