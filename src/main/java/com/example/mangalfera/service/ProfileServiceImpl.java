@@ -32,6 +32,9 @@ public class ProfileServiceImpl implements ProfileService  {
     @Autowired
     private PartnerPreferenceService partnerPreferenceService;
 
+//    @Autowired
+//    private AmazonS3 amazonS3;
+
     @Override
     public ProfileDTO createProfile(ProfileDTO profileDTO) {
         Profile profile = ProfileMapper.toEntity(profileDTO);
@@ -150,4 +153,15 @@ public class ProfileServiceImpl implements ProfileService  {
 
         return matchedProfiles;
     }
+
+//    public String uploadToS3(MultipartFile file) {
+//        String bucketName = "your-bucket-name";
+//        String key = UUID.randomUUID() + "_" + file.getOriginalFilename();
+//
+//        ObjectMetadata metadata = new ObjectMetadata();
+//        metadata.setContentLength(file.getSize());
+//
+//        amazonS3.putObject(new PutObjectRequest(bucketName, key, file.getInputStream(), metadata));
+//        return amazonS3.getUrl(bucketName, key).toString();
+//    }
 }
