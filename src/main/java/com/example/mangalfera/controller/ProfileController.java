@@ -1,6 +1,13 @@
 package com.example.mangalfera.controller;
 
 import com.example.mangalfera.dto.ProfileDTO;
+import com.example.mangalfera.model.Photo;
+import com.example.mangalfera.model.Profile;
+import com.example.mangalfera.model.Video;
+import com.example.mangalfera.repository.PhotoRepository;
+import com.example.mangalfera.repository.ProfileRepository;
+import com.example.mangalfera.repository.VideoRepository;
+import com.example.mangalfera.security.LoggedInUserUtil;
 import com.example.mangalfera.service.ProfileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -12,14 +19,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.xml.crypto.Data;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/profiles")
@@ -27,6 +34,15 @@ public class ProfileController {
 
     @Autowired
     private ProfileService profileService;
+
+    @Autowired
+    private ProfileRepository profileRepository;
+
+    @Autowired
+    private PhotoRepository photoRepository;
+
+    @Autowired
+    private VideoRepository videoRepository;
 
     @PostMapping
     public ResponseEntity<ProfileDTO> createProfile(@RequestBody ProfileDTO profileDTO) {
@@ -71,7 +87,9 @@ public class ProfileController {
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file,
+                                             @RequestParam Long profileId,
+                                             @RequestParam Long userId) {
         try {
             String uploadDir = "C:/uploaded-files/";
             File directory = new File(uploadDir);
@@ -83,18 +101,30 @@ public class ProfileController {
             Path filePath = Paths.get(uploadDir + fileName);
             Files.write(filePath, file.getBytes());
 
-            // Optionally return the file path or URL
-            return ResponseEntity.ok("File uploaded successfully: " + fileName);
+            Photo photo = new Photo();
+            photo.setFilename(fileName);
+            photo.setPath(String.valueOf(filePath));
+            photo.setCreatedBy(LoggedInUserUtil.getLoggedInEmail());
+            photo.setCreatedDate(new Date());
+            photo.setPermissionImage(false);
+            photo.setUserId(userId);
+            Profile profile = profileRepository.findById(profileId)
+                    .orElseThrow(() -> new RuntimeException("Profile not found"));
+            photo.setProfile(profile);
+            photoRepository.save(photo);
+            return ResponseEntity.ok("File uploaded & saved successfully: " + fileName);
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Upload failed");
         }
     }
 
-    @GetMapping("/gallery")
-    public ResponseEntity<List<String>> getUploadedPhotos() {
-        File folder = new File("C:/uploaded-files/");
-        String[] files = folder.list((dir, name) -> name.matches(".*\\.(jpg|png|jpeg|gif|webp)$"));
-        return ResponseEntity.ok(Arrays.asList(files));
+    @GetMapping("/gallery/{profileId}")
+    public ResponseEntity<List<String>> getUploadedPhotos(@PathVariable Long profileId) {
+        List<Photo> photos = photoRepository.findByProfileId(profileId);
+        List<String> filenames = photos.stream()
+                .map(Photo::getFilename)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(filenames);
     }
 
     @GetMapping("/files/{filename:.+}")
@@ -122,5 +152,81 @@ public class ProfileController {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+    @PostMapping("/upload-video")
+    public ResponseEntity<String> uploadVideo(@RequestParam("file") MultipartFile file,
+                                              @RequestParam Long profileId,
+                                              @RequestParam Long userId) {
+        try {
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.startsWith("video/")) {
+                return ResponseEntity.badRequest().body("Invalid file type. Only videos are allowed.");
+            }
+
+            String uploadDir = "C:/uploaded-videos/";
+            File directory = new File(uploadDir);
+            if (!directory.exists()) {
+                directory.mkdirs();
+            }
+
+            String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+            Path filePath = Paths.get(uploadDir + fileName);
+            Files.write(filePath, file.getBytes());
+
+            Video video = new Video();
+            video.setFilename(fileName);
+            video.setPath(filePath.toString());
+            video.setUserId(userId);
+            Profile profile = profileRepository.findById(profileId)
+                    .orElseThrow(() -> new RuntimeException("Profile not found"));
+            video.setProfile(profile);
+            video.setPermissionVideo(false);
+            video.setCreatedBy(LoggedInUserUtil.getLoggedInEmail());
+            video.setCreatedDate(new Date());
+            videoRepository.save(video);
+
+            return ResponseEntity.ok("Video uploaded successfully: " + fileName);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Video upload failed");
+        }
+    }
+
+    @GetMapping("/video-gallery/{profileId}")
+    public ResponseEntity<List<String>> getUploadedVideos(@PathVariable Long profileId) {
+        List<Video> videos = videoRepository.findByProfileId(profileId);
+        List<String> filenames = videos.stream()
+                .map(Video::getFilename)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(filenames);
+    }
+
+    @GetMapping("/videoFiles/{filename:.+}")
+    public ResponseEntity<Resource> getVideoFile(@PathVariable String filename) {
+        try {
+            Path filePath = Paths.get("C:/uploaded-videos/").resolve(filename).normalize();
+            Resource resource = new UrlResource(filePath.toUri());
+
+            if (!resource.exists() || !resource.isReadable()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // Handle .webp content-type
+            String contentType = Files.probeContentType(filePath);
+            if (contentType == null && filename.toLowerCase().endsWith(".webp")) {
+                contentType = "image/webp";
+            }
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType != null ? contentType : "application/octet-stream"))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
+                    .body(resource);
+
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+
+
 
 }
