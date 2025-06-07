@@ -19,7 +19,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.xml.crypto.Data;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -119,12 +118,45 @@ public class ProfileController {
     }
 
     @GetMapping("/gallery/{profileId}")
-    public ResponseEntity<List<String>> getUploadedPhotos(@PathVariable Long profileId) {
+    public ResponseEntity<List<Photo>> getUploadedPhotos(@PathVariable Long profileId) {
         List<Photo> photos = photoRepository.findByProfileId(profileId);
-        List<String> filenames = photos.stream()
-                .map(Photo::getFilename)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(filenames);
+        return ResponseEntity.ok(photos);
+//        List<String> filenames = photos.stream()
+//                .map(Photo::getFilename)
+//                .collect(Collectors.toList());
+//        return ResponseEntity.ok(filenames);
+    }
+
+    @PutMapping("/gallery/accept/{photoId}")
+    public ResponseEntity<String> acceptPhoto(@PathVariable Long photoId) {
+        Optional<Photo> optionalPhoto = photoRepository.findById(photoId);
+        if (optionalPhoto.isPresent()) {
+            Photo photo = optionalPhoto.get();
+            photo.setPermissionImage(true);
+            photoRepository.save(photo);
+            return ResponseEntity.ok("Photo accepted.");
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PutMapping("/gallery/reject/{photoId}")
+    public ResponseEntity<String> rejectPhoto(@PathVariable Long photoId) {
+        Optional<Photo> optionalPhoto = photoRepository.findById(photoId);
+        if (optionalPhoto.isPresent()) {
+            Photo photo = optionalPhoto.get();
+            photo.setPermissionImage(false);
+            photoRepository.save(photo);
+            return ResponseEntity.ok("Photo rejected.");
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/gallery/photos")
+    public ResponseEntity<List<Photo>> getAllPhotos() {
+        List<Photo> photos = photoRepository.findAll();
+        return ResponseEntity.ok(photos);
     }
 
     @GetMapping("/files/{filename:.+}")
@@ -198,6 +230,12 @@ public class ProfileController {
                 .map(Video::getFilename)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(filenames);
+    }
+
+    @GetMapping("/all/video-gallery")
+    public ResponseEntity<List<Video>> getAllVideos() {
+        List<Video> videos = videoRepository.findAll();
+        return ResponseEntity.ok(videos);
     }
 
     @GetMapping("/videoFiles/{filename:.+}")
