@@ -1,6 +1,7 @@
 package com.example.mangalfera.controller;
 
 import com.example.mangalfera.dto.ProfileDTO;
+import com.example.mangalfera.dto.SearchRequest;
 import com.example.mangalfera.model.Photo;
 import com.example.mangalfera.model.Profile;
 import com.example.mangalfera.model.Video;
@@ -264,7 +265,11 @@ public class ProfileController {
         }
     }
 
-
+    @PostMapping("/search")
+    public ResponseEntity<List<ProfileDTO>> searchProfiles(@RequestBody SearchRequest request) {
+        List<ProfileDTO> results = profileService.searchProfiles(request);
+        return ResponseEntity.ok(results);
+    }
 
 
 }

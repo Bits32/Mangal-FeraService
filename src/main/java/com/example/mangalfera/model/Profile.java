@@ -33,7 +33,7 @@ public class Profile {
     private Integer heightInCm;
     private Integer weightInKg;
     private String bloodGroup;
-    private String maritalStatus; // Single / Divorced / Widowed / etc.
+    private String maritalStatus;
 
     // Religion & Caste
     private String religion;
@@ -67,7 +67,7 @@ public class Profile {
     private String rashi;
     private String nakshatra;
     private String gotra;
-    private String manglik; // Yes / No / Don't Know
+    private String manglik;
 
     // Media
     private String profilePhotoUrl;

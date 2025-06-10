@@ -1,6 +1,7 @@
 package com.example.mangalfera.service;
 
 import com.example.mangalfera.dto.ProfileDTO;
+import com.example.mangalfera.dto.SearchRequest;
 
 import java.util.List;
 
@@ -13,4 +14,5 @@ public interface ProfileService {
 //    ProfileDTO getProfileById(String email);
     List<ProfileDTO> getAllProfiles();
     List<ProfileDTO> getMatchedProfiles();
+    List<ProfileDTO> searchProfiles(SearchRequest request);
 }
