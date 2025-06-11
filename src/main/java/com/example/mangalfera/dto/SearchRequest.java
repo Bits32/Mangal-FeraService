@@ -1,5 +1,7 @@
 package com.example.mangalfera.dto;
 
+import java.util.List;
+
 public class SearchRequest {
     private String gender;
     private Integer minAge;
@@ -22,7 +24,7 @@ public class SearchRequest {
 
     private String manglik;
 
-    private String bloodGroup;
+    private List<String> bloodGroups;
     private String firstName;
     private String middleName;
     private String lastName;
@@ -172,12 +174,12 @@ public class SearchRequest {
         this.manglik = manglik;
     }
 
-    public String getBloodGroup() {
-        return bloodGroup;
+    public List<String> getBloodGroups() {
+        return bloodGroups;
     }
 
-    public void setBloodGroup(String bloodGroup) {
-        this.bloodGroup = bloodGroup;
+    public void setBloodGroups(List<String> bloodGroups) {
+        this.bloodGroups = bloodGroups;
     }
 
     public String getFirstName() {

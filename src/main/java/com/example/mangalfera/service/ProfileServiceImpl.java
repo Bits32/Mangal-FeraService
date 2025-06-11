@@ -277,10 +277,8 @@ public class ProfileServiceImpl implements ProfileService  {
             ));
         }
 
-
-
-        if (request.getBloodGroup() != null && !request.getBloodGroup().isEmpty()) {
-            predicates.add(cb.equal(profile.get("bloodGroup"), request.getBloodGroup()));
+        if (request.getBloodGroups() != null && !request.getBloodGroups().isEmpty()) {
+            predicates.add(profile.get("bloodGroup").in(request.getBloodGroups()));
         }
 
         if (request.getFirstName() != null && !request.getFirstName().isEmpty()) {
