@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Getter
@@ -22,6 +24,7 @@ public class Profile {
     private User user;
 
     // Basic Details
+    private String profileId;
     private String firstName;
     private String middleName;
     private String lastName;
@@ -34,24 +37,44 @@ public class Profile {
     private Integer weightInKg;
     private String bloodGroup;
     private String maritalStatus;
+    private String grewUp;
+    private String diet;
+    private String healthInformation;
+    private String healthOtherDetails;
+    private String disability;
+    private String presentlyStyingState;
+    private String presentlyStyingCity;
 
     // Religion & Caste
     private String religion;
     private String caste;
     private String subCaste;
+    private String religionPath;
     private String motherTongue;
+    private String community;
+    private String subCommunity;
+
 
     // Education & Profession
+    private String ethnicOrigin;
     private String education;
+    private String collegeName;
+    private String workingWith;
+    private String workingAs;
     private String occupation;
+    private String occupationPosition;
     private String company;
-    private Integer annualIncome;
+    private String annualIncome;
+    private String distanceStudding;
+
 
     // Location
     private String country;
     private String state;
     private String city;
     private String address;
+    private String pinCode;
+    private String residencyStatus;
 
     // Appearance
     private String complexion;
@@ -68,6 +91,41 @@ public class Profile {
     private String nakshatra;
     private String gotra;
     private String manglik;
+    private String countryOfBirth;
+    private String stateOfBirth;
+    private String cityOfBirth;
+    private String placeOFBirth;
+    private String timeOfBirth;
+
+    // Family details
+    private String motherName;
+    private String motherDetails;
+    private String fatherDetails;
+    private String motherHomeTown;
+    private String fatherHomeTown;
+    private String familyLocation;
+
+    @ElementCollection
+    @CollectionTable(name = "profile_sisters", joinColumns = @JoinColumn(name = "profile_id"))
+    private List<Sibling> sisters;
+
+    @ElementCollection
+    @CollectionTable(name = "profile_brothers", joinColumns = @JoinColumn(name = "profile_id"))
+    private List<Sibling> brothers;
+
+    private String familyFinancialStatus;
+    private String fatherEducation;
+    private String motherEducation;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "profile_id")
+    private List<Child> children = new ArrayList<>();
+
+    @Column(name = "hobbies")
+    private String hobbiesRaw;
+
+    @Transient
+    private List<String> hobbies;
 
     // Media
     private String profilePhotoUrl;
@@ -81,6 +139,8 @@ public class Profile {
 
     private Boolean permissionImage;
     private Boolean permissionVideo;
+
+    private String memberType;
 
     private String createdBy;
     private Date createdDate;

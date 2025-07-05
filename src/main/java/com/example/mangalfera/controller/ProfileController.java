@@ -10,6 +10,7 @@ import com.example.mangalfera.repository.ProfileRepository;
 import com.example.mangalfera.repository.VideoRepository;
 import com.example.mangalfera.security.LoggedInUserUtil;
 import com.example.mangalfera.service.ProfileService;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -160,6 +161,13 @@ public class ProfileController {
         return ResponseEntity.ok(photos);
     }
 
+    @Transactional
+    @DeleteMapping("/gallery/delete/{photoId}")
+    public ResponseEntity<String> deletePhoto(@PathVariable Long photoId) {
+        photoRepository.deleteById(photoId);
+        return ResponseEntity.ok("Photo deleted successfully");
+    }
+
     @GetMapping("/files/{filename:.+}")
     public ResponseEntity<Resource> getFile(@PathVariable String filename) {
         try {
@@ -225,18 +233,60 @@ public class ProfileController {
     }
 
     @GetMapping("/video-gallery/{profileId}")
-    public ResponseEntity<List<String>> getUploadedVideos(@PathVariable Long profileId) {
+    public ResponseEntity<List<Map<String, Object>>> getUploadedVideos(@PathVariable Long profileId) {
         List<Video> videos = videoRepository.findByProfileId(profileId);
-        List<String> filenames = videos.stream()
-                .map(Video::getFilename)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(filenames);
+
+        List<Map<String, Object>> response = videos.stream().map(video -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", video.getId());
+            map.put("filename", video.getFilename());
+            map.put("permissionVideo", video.getPermissionVideo());
+            map.put("createdDate", video.getCreatedDate());
+            map.put("createdBy", video.getCreatedBy());
+            return map;
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
+    }
+
+
+    @PutMapping("/video/accept/{videoId}")
+    public ResponseEntity<String> acceptVideo(@PathVariable Long videoId) {
+        Optional<Video> optionalVideo = videoRepository.findById(videoId);
+        if (optionalVideo.isPresent()) {
+            Video video = optionalVideo.get();
+            video.setPermissionVideo(true);
+            videoRepository.save(video);
+            return ResponseEntity.ok("Video accepted.");
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PutMapping("/video/reject/{videoId}")
+    public ResponseEntity<String> rejectVideo(@PathVariable Long videoId) {
+        Optional<Video> optionalVideo = videoRepository.findById(videoId);
+        if (optionalVideo.isPresent()) {
+            Video video = optionalVideo.get();
+            video.setPermissionVideo(false);
+            videoRepository.save(video);
+            return ResponseEntity.ok("Video rejected.");
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @GetMapping("/all/video-gallery")
     public ResponseEntity<List<Video>> getAllVideos() {
         List<Video> videos = videoRepository.findAll();
         return ResponseEntity.ok(videos);
+    }
+
+    @Transactional
+    @DeleteMapping("/video-gallery/delete/{videoId}")
+    public ResponseEntity<String> deleteVideo(@PathVariable Long videoId) {
+        videoRepository.deleteById(videoId);
+        return ResponseEntity.ok("Video deleted successfully");
     }
 
     @GetMapping("/videoFiles/{filename:.+}")

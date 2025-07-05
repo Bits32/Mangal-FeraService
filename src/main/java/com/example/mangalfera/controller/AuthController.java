@@ -16,6 +16,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.Optional;
 
 @RestController
@@ -73,8 +74,65 @@ public class AuthController {
         user.setRole("User");
         user.setEmail(request.getEmail());
         user.setProfileCreatedFor(request.getProfileCreatedFor());
+        user.setMembershipPlanId(request.getMembershipPlanId());
+        user.setMembershipPlan(request.getMembershipPlan());
+        user.setMembershipStartPlan(request.getMembershipStartPlan());
+        user.setMembershipEndPlan(request.getMembershipEndPlan());
+        user.setActive(true);
+        user.setCreatedDate(new Date());
+        user.setUpdatedDate(new Date());
         userService.registerUser(user);
         return "User registered successfully!";
+    }
+
+    @PutMapping("/update/{id}")
+    public ResponseEntity<String> updateUser(@PathVariable Long id, @RequestBody RegisterRequest request) {
+        try {
+            userService.updateUser(id, request);
+            return ResponseEntity.ok("User updated successfully!");
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
+    }
+
+    @PutMapping("/update/plan/{id}")
+    public ResponseEntity<String> updateUserPlan(@PathVariable Long id, @RequestBody RegisterRequest request) {
+        try {
+            userService.updateUserPlan(id, request);
+            return ResponseEntity.ok("User updated Plan successfully!");
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
+    }
+
+    @PutMapping("/update/view/contact/{id}")
+    public ResponseEntity<String> updateUserViewContact(@PathVariable Long id, @RequestBody RegisterRequest request) {
+        try {
+            userService.updateUserViewContact(id, request);
+            return ResponseEntity.ok("User updated Plan successfully!");
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
+    }
+
+    @PutMapping("/update/photos/count/{id}")
+    public ResponseEntity<String> updateUserPhotosCounts(@PathVariable Long id, @RequestBody RegisterRequest request) {
+        try {
+            userService.updateUserPhotosCounts(id, request);
+            return ResponseEntity.ok("User updated Plan successfully!");
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
+    }
+
+    @PutMapping("/update/videos/count/{id}")
+    public ResponseEntity<String> updateUserVideosCounts(@PathVariable Long id, @RequestBody RegisterRequest request) {
+        try {
+            userService.updateUserVideosCounts(id, request);
+            return ResponseEntity.ok("User updated Plan successfully!");
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
     }
 
     @PutMapping("/reset-password")
@@ -95,5 +153,4 @@ public class AuthController {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
     }
-
 }

@@ -15,14 +15,13 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -47,9 +46,20 @@ public class ProfileServiceImpl implements ProfileService  {
 //    @Autowired
 //    private AmazonS3 amazonS3;
 
+    private String generateRandomProfileId() {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        StringBuilder sb = new StringBuilder(7);
+        Random random = new Random();
+        for (int i = 0; i < 7; i++) {
+            sb.append(chars.charAt(random.nextInt(chars.length())));
+        }
+        return  "MF" + sb.toString();
+    }
+
     @Override
     public ProfileDTO createProfile(ProfileDTO profileDTO) {
         Profile profile = ProfileMapper.toEntity(profileDTO);
+        profile.setProfileId(generateRandomProfileId());
         User user = userService.getUserByEmail(LoggedInUserUtil.getLoggedInEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
         user.setId(user.getId());
@@ -60,11 +70,16 @@ public class ProfileServiceImpl implements ProfileService  {
         return ProfileMapper.toDTO(savedProfile);
     }
 
+
     @Override
+    @Transactional
     public ProfileDTO updateProfile(Long id, ProfileDTO profileDTO) {
         Optional<Profile> existing = profileRepository.findById(id);
         if (existing.isPresent()) {
             Profile updatedData  = ProfileMapper.toEntity(profileDTO);
+            if (profileDTO.getHobbies() != null && !profileDTO.getHobbies().isEmpty()) {
+                updatedData.setHobbiesRaw(String.join(",", profileDTO.getHobbies()));
+            }
             updatedData.setId(id);
             Long userId = profileDTO.getUserId();
             User user = userRepository.findById(userId)
@@ -208,32 +223,57 @@ public class ProfileServiceImpl implements ProfileService  {
         }
 
         if (request.getReligion() != null) {
-            predicates.add(cb.like(
-                    cb.lower(profile.get("religion")),
-                    "%" + request.getReligion().toLowerCase() + "%"
-            ));
+            predicates.add(profile.get("religion").in(request.getReligion()));
         }
+
         if (request.getCaste() != null) {
-            predicates.add(cb.like(
-                    cb.lower(profile.get("caste")),
-                    "%" + request.getCaste().toLowerCase() + "%"
-            ));
+            predicates.add(profile.get("caste").in(request.getCaste()));
         }
-        if (request.getMotherTongue() != null) {
-            predicates.add(cb.like(
-                    cb.lower(profile.get("motherTongue")),
-                    "%" + request.getMotherTongue().toLowerCase() + "%"
-            ));
+
+        if (request.getMaritalStatus() != null) {
+            predicates.add(profile.get("maritalStatus").in(request.getMaritalStatus()));
+        }
+
+        if (request.getResidencyStatus() != null) {
+            predicates.add(profile.get("residencyStatus").in(request.getResidencyStatus()));
+        }
+
+        if (request.getWorkingAs() != null) {
+            predicates.add(profile.get("workingAs").in(request.getWorkingAs()));
+        }
+
+        if (request.getAnnualIncome() != null) {
+            predicates.add(profile.get("annualIncome").in(request.getAnnualIncome()));
+        }
+
+        if (request.getCreatedDate() != null && !request.getCreatedDate().isEmpty()) {
+            String period = request.getCreatedDate().get(0);
+            LocalDateTime cutoffDateTime = null;
+
+            switch (period) {
+                case "day":
+                    cutoffDateTime = LocalDate.now().minusDays(1).atStartOfDay();
+                    break;
+                case "week":
+                    cutoffDateTime = LocalDate.now().minusWeeks(1).atStartOfDay();
+                    break;
+                case "month":
+                    cutoffDateTime = LocalDate.now().minusMonths(1).atStartOfDay();
+                    break;
+            }
+
+            if (cutoffDateTime != null) {
+                predicates.add(cb.greaterThanOrEqualTo(profile.get("createdDate"), cutoffDateTime));
+            }
         }
 
         if (request.getMotherTongue() != null) {
-            predicates.add(cb.like(
-                    cb.lower(profile.get("motherTongue")),
-                    "%" + request.getMotherTongue().toLowerCase() + "%"
-            ));
+            predicates.add(profile.get("motherTongue").in(request.getMotherTongue()));
         }
 
-
+        if (request.getWorkingWith() != null) {
+            predicates.add(profile.get("workingWith").in(request.getWorkingWith()));
+        }
 
         if (request.getEducation() != null) {
             predicates.add(cb.like(
@@ -257,24 +297,23 @@ public class ProfileServiceImpl implements ProfileService  {
         }
 
         if (request.getCountry() != null) {
-            predicates.add(cb.like(
-                    cb.lower(profile.get("country")),
-                    "%" + request.getCountry().toLowerCase() + "%"
-            ));
+            predicates.add(profile.get("country").in(request.getCountry()));
         }
 
         if (request.getState() != null) {
-            predicates.add(cb.like(
-                    cb.lower(profile.get("state")),
-                    "%" + request.getState().toLowerCase() + "%"
-            ));
+            predicates.add(profile.get("state").in(request.getState()));
         }
 
         if (request.getCity() != null) {
-            predicates.add(cb.like(
-                    cb.lower(profile.get("city")),
-                    "%" + request.getCity().toLowerCase() + "%"
-            ));
+            predicates.add(profile.get("city").in(request.getCity()));
+        }
+
+        if (request.getGrewUp() != null) {
+            predicates.add(profile.get("grewUp").in(request.getGrewUp()));
+        }
+
+        if (request.getDiet() != null) {
+            predicates.add(profile.get("diet").in(request.getDiet()));
         }
 
         if (request.getBloodGroups() != null && !request.getBloodGroups().isEmpty()) {
@@ -319,6 +358,10 @@ public class ProfileServiceImpl implements ProfileService  {
 
         if (request.getRashi() != null && !request.getRashi().isEmpty()) {
             predicates.add(cb.equal(profile.get("rashi"), request.getRashi()));
+        }
+
+        if (request.getProfileId() != null && !request.getProfileId().isEmpty()) {
+            predicates.add(cb.equal(profile.get("profileId"), request.getProfileId()));
         }
 
         if (request.getNakshatra() != null && !request.getNakshatra().isEmpty()) {

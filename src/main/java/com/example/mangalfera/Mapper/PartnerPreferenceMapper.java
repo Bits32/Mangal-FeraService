@@ -24,6 +24,7 @@ public class PartnerPreferenceMapper {
         dto.setState(preference.getState());
         dto.setCity(preference.getCity());
         dto.setManglik(preference.getManglik());
+        dto.setDiet(preference.getDiet());
 
         dto.setCreatedBy(preference.getCreatedBy());
         dto.setCreatedDate(preference.getCreatedDate());
@@ -52,6 +53,7 @@ public class PartnerPreferenceMapper {
         preference.setState(dto.getState());
         preference.setCity(dto.getCity());
         preference.setManglik(dto.getManglik());
+        preference.setDiet(dto.getDiet());
 
         preference.setCreatedBy(dto.getCreatedBy());
         preference.setCreatedDate(dto.getCreatedDate());

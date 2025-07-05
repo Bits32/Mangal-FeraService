@@ -18,12 +18,13 @@ public class PartnerPreferenceDTO {
     public String motherTongue;
     public String education;
     public String occupation;
-    public Integer incomeFrom;
-    public Integer incomeTo;
+    public String incomeFrom;
+    public String incomeTo;
     public String country;
     public String state;
     public String city;
     public String manglik;
+    public String diet;
 
     private String createdBy;
     private Date createdDate;
