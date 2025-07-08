@@ -19,11 +19,11 @@ public class PrivacySettings {
                 .orElse(new PrivacySetting());
 
         setting.setProfileId(dto.getProfileId());
-        setting.setPhotoPublic(dto.isPhotoPublic());
-        setting.setVideoPublic(dto.isVideoPublic());
-        setting.setFamilyDetailsPublic(dto.isFamilyDetailsPublic());
-        setting.setHoroscopePublic(dto.isHoroscopePublic());
-        setting.setLocationPublic(dto.isLocationPublic());
+        setting.setPhotoPublic(dto.getPhotoPublic());
+        setting.setVideoPublic(dto.getVideoPublic());
+        setting.setFamilyDetailsPublic(dto.getFamilyDetailsPublic());
+        setting.setHoroscopePublic(dto.getHoroscopePublic());
+        setting.setLocationPublic(dto.getLocationPublic());
         setting.setUpdatedDate(new Date());
 
         privacySettingRepository.save(setting);

@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
+
 @RestController
 @RequestMapping("/api/settings")
 public class SettingsController {
@@ -26,17 +28,27 @@ public class SettingsController {
 
     @GetMapping("/privacy-settings/{profileId}")
     public ResponseEntity<PrivacySettingDto> getPrivacy(@PathVariable Long profileId) {
-        PrivacySetting setting = privacySettingRepository.findByProfileId(profileId)
-                .orElseThrow(() -> new RuntimeException("Privacy settings not found"));
+        Optional<PrivacySetting> optionalSetting = privacySettingRepository.findByProfileId(profileId);
 
         PrivacySettingDto dto = new PrivacySettingDto();
         dto.setProfileId(profileId);
-        dto.setPhotoPublic(setting.isPhotoPublic());
-        dto.setVideoPublic(setting.isVideoPublic());
-        dto.setFamilyDetailsPublic(setting.isFamilyDetailsPublic());
-        dto.setHoroscopePublic(setting.isHoroscopePublic());
-        dto.setLocationPublic(setting.isLocationPublic());
+
+        if (optionalSetting.isPresent()) {
+            PrivacySetting setting = optionalSetting.get();
+            dto.setPhotoPublic(setting.isPhotoPublic());
+            dto.setVideoPublic(setting.isVideoPublic());
+            dto.setFamilyDetailsPublic(setting.isFamilyDetailsPublic());
+            dto.setHoroscopePublic(setting.isHoroscopePublic());
+            dto.setLocationPublic(setting.isLocationPublic());
+        } else {
+            dto.setPhotoPublic(false);
+            dto.setVideoPublic(false);
+            dto.setFamilyDetailsPublic(false);
+            dto.setHoroscopePublic(false);
+            dto.setLocationPublic(false);
+        }
 
         return ResponseEntity.ok(dto);
     }
+
 }

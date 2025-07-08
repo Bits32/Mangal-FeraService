@@ -13,11 +13,11 @@ public class PrivacySetting {
     @Column(name = "profile_id", nullable = false, unique = true)
     private Long profileId;
 
-    private boolean isPhotoPublic;
-    private boolean isVideoPublic;
-    private boolean isFamilyDetailsPublic;
-    private boolean isHoroscopePublic;
-    private boolean isLocationPublic;
+    private boolean photoPublic;
+    private boolean videoPublic;
+    private boolean familyDetailsPublic;
+    private boolean horoscopePublic;
+    private boolean locationPublic;
 
     private Date updatedDate;
 
@@ -38,43 +38,43 @@ public class PrivacySetting {
     }
 
     public boolean isPhotoPublic() {
-        return isPhotoPublic;
+        return photoPublic;
     }
 
     public void setPhotoPublic(boolean photoPublic) {
-        isPhotoPublic = photoPublic;
+        this.photoPublic = photoPublic;
     }
 
     public boolean isVideoPublic() {
-        return isVideoPublic;
+        return videoPublic;
     }
 
     public void setVideoPublic(boolean videoPublic) {
-        isVideoPublic = videoPublic;
+        this.videoPublic = videoPublic;
     }
 
     public boolean isFamilyDetailsPublic() {
-        return isFamilyDetailsPublic;
+        return familyDetailsPublic;
     }
 
     public void setFamilyDetailsPublic(boolean familyDetailsPublic) {
-        isFamilyDetailsPublic = familyDetailsPublic;
+        this.familyDetailsPublic = familyDetailsPublic;
     }
 
     public boolean isHoroscopePublic() {
-        return isHoroscopePublic;
+        return horoscopePublic;
     }
 
     public void setHoroscopePublic(boolean horoscopePublic) {
-        isHoroscopePublic = horoscopePublic;
+        this.horoscopePublic = horoscopePublic;
     }
 
     public boolean isLocationPublic() {
-        return isLocationPublic;
+        return locationPublic;
     }
 
     public void setLocationPublic(boolean locationPublic) {
-        isLocationPublic = locationPublic;
+        this.locationPublic = locationPublic;
     }
 
     public Date getUpdatedDate() {
