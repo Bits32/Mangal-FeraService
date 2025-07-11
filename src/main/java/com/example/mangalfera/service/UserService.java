@@ -55,18 +55,12 @@ public class UserService {
 
         Date today = new Date();
 
-        if (user.getMembershipEndPlan() != null && user.getMembershipEndPlan().before(today)) {
-            user.setRemainingContactViews(0);
-            user.setRemainingPhotos(0);
-            user.setRemainingVideos(0);
-        } else {
-            user.setRemainingContactViews(user.getContactViewLimit() - user.getContactViewCount());
-            user.setRemainingPhotos( user.getPhotosLimits() - user.getPhotosUseCounts());
-            user.setRemainingVideos(user.getVideosLimit() - user.getVideosUseCounts());
+        boolean isFirstTimePlan = user.getMembershipPlanId() == null;
+        if (isFirstTimePlan) {
+            user.setContactViewCount(0);
+            user.setPhotosUseCounts(0);
+            user.setVideosUseCounts(0);
         }
-        user.setContactViewCount(0);
-        user.setPhotosUseCounts(0);
-        user.setVideosUseCounts(0);
 
         user.setMembershipPlanId(request.getMembershipPlanId());
         user.setMembershipPlan(request.getMembershipPlan());
@@ -75,9 +69,39 @@ public class UserService {
         user.setContactViewLimit(request.getContactViewLimit());
         user.setPhotosLimits(request.getPhotosLimits());
         user.setVideosLimit(request.getVideosLimit());
+
+        int contactLimit = request.getContactViewLimit() != null ? request.getContactViewLimit() : 0;
+        int photoLimit = request.getPhotosLimits() != null ? request.getPhotosLimits() : 0;
+        int videoLimit = request.getVideosLimit() != null ? request.getVideosLimit() : 0;
+
+        int contactUsed = user.getContactViewCount() != null ? user.getContactViewCount() : 0;
+        int photoUsed = user.getPhotosUseCounts() != null ? user.getPhotosUseCounts() : 0;
+        int videoUsed = user.getVideosUseCounts() != null ? user.getVideosUseCounts() : 0;
+
+        boolean isPlanExpired = request.getMembershipEndPlan() != null && request.getMembershipEndPlan().before(today);
+
+        if (isPlanExpired) {
+            user.setRemainingContactViews(0);
+            user.setRemainingPhotos(0);
+            user.setRemainingVideos(0);
+        } else {
+            if (isFirstTimePlan) {
+                user.setRemainingContactViews(0);
+                user.setRemainingPhotos(0);
+                user.setRemainingVideos(0);
+            } else {
+                user.setRemainingContactViews(Math.max(0, contactLimit - contactUsed));
+                user.setRemainingPhotos(Math.max(0, photoLimit - photoUsed));
+                user.setRemainingVideos(Math.max(0, videoLimit - videoUsed));
+                user.setContactViewCount(0);
+                user.setPhotosUseCounts(0);
+                user.setVideosUseCounts(0);
+            }
+        }
         user.setUpdatedDate(new Date());
         userRepository.save(user);
     }
+
 
     public void updateUserViewContact(Long id, RegisterRequest request) {
         User user = userRepository.findById(id)

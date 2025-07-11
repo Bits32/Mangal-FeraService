@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.4.5</version>
+		<version>3.2.7</version> <!-- Reverted to 3.2.7 for broader compatibility with aws-java-sdk-s3 -->
 		<relativePath/>
 	</parent>
 	<groupId>com.example</groupId>
@@ -28,6 +28,8 @@
 	</scm>
 	<properties>
 		<java.version>17</java.version>
+		<!-- Added the AWS SDK version property for consistency and correct resolution -->
+		<aws-java-sdk.version>1.12.748</aws-java-sdk.version> <!-- Latest compatible version -->
 	</properties>
 	<dependencies>
 		<dependency>
@@ -97,6 +99,15 @@
 			<version>0.11.5</version>
 			<scope>runtime</scope>
 		</dependency>
+		<!-- AWS SDK for S3 operations (MinIO compatible) -->
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-java-sdk-s3</artifactId>
+			<version>1.12.673</version>
+		</dependency>
+
+		<!-- Removed duplicate spring-boot-starter-test dependency -->
+
 		<dependency>
 			<groupId>com.razorpay</groupId>
 			<artifactId>razorpay-java</artifactId>

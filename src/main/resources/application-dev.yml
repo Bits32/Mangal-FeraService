@@ -2,9 +2,9 @@ spring:
   application:
     name: mangalfera
   datasource:
-    url: jdbc:postgresql://localhost:5432/mangalfera
+    url: jdbc:postgresql://168.231.102.95:5433/mangalfera
     username: postgres
-    password: sa123
+    password: YOUR_VERY_STRONG_PASSWORD_HERE
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:

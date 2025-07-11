@@ -64,7 +64,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public String register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
         User user = new User();
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
@@ -82,7 +82,22 @@ public class AuthController {
         user.setCreatedDate(new Date());
         user.setUpdatedDate(new Date());
         userService.registerUser(user);
-        return "User registered successfully!";
+
+        String token = jwtUtil.generateToken(
+                user.getEmail(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getRole()
+        );
+
+        LoginResponse response = new LoginResponse(
+                "Bearer " + token,
+                user.getEmail(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getRole()
+        );
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/update/{id}")
@@ -98,6 +113,7 @@ public class AuthController {
     @PutMapping("/update/plan/{id}")
     public ResponseEntity<String> updateUserPlan(@PathVariable Long id, @RequestBody RegisterRequest request) {
         try {
+            System.out.println("come in method");
             userService.updateUserPlan(id, request);
             return ResponseEntity.ok("User updated Plan successfully!");
         } catch (RuntimeException ex) {

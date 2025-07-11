@@ -1,17 +1,21 @@
 package com.example.mangalfera.controller;
 
+import com.amazonaws.services.s3.model.S3Object;
 import com.example.mangalfera.dto.ProfileDTO;
 import com.example.mangalfera.dto.SearchRequest;
 import com.example.mangalfera.model.Photo;
 import com.example.mangalfera.model.Profile;
+import com.example.mangalfera.model.S3UploadResponse;
 import com.example.mangalfera.model.Video;
 import com.example.mangalfera.repository.PhotoRepository;
 import com.example.mangalfera.repository.ProfileRepository;
 import com.example.mangalfera.repository.VideoRepository;
 import com.example.mangalfera.security.LoggedInUserUtil;
 import com.example.mangalfera.service.ProfileService;
+import com.example.mangalfera.service.S3Service;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
@@ -23,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -44,6 +49,9 @@ public class ProfileController {
 
     @Autowired
     private VideoRepository videoRepository;
+
+    @Autowired
+    private S3Service s3Service;
 
     @PostMapping
     public ResponseEntity<ProfileDTO> createProfile(@RequestBody ProfileDTO profileDTO) {
@@ -92,19 +100,11 @@ public class ProfileController {
                                              @RequestParam Long profileId,
                                              @RequestParam Long userId) {
         try {
-            String uploadDir = "C:/uploaded-files/";
-            File directory = new File(uploadDir);
-            if (!directory.exists()) {
-                directory.mkdirs();
-            }
-
-            String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-            Path filePath = Paths.get(uploadDir + fileName);
-            Files.write(filePath, file.getBytes());
+            S3UploadResponse response = s3Service.uploadToS3(file);
 
             Photo photo = new Photo();
-            photo.setFilename(fileName);
-            photo.setPath(String.valueOf(filePath));
+            photo.setFilename(file.getOriginalFilename());
+            photo.setFilename(response.getFilename());
             photo.setCreatedBy(LoggedInUserUtil.getLoggedInEmail());
             photo.setCreatedDate(new Date());
             photo.setPermissionImage(false);
@@ -113,7 +113,7 @@ public class ProfileController {
                     .orElseThrow(() -> new RuntimeException("Profile not found"));
             photo.setProfile(profile);
             photoRepository.save(photo);
-            return ResponseEntity.ok("File uploaded & saved successfully: " + fileName);
+            return ResponseEntity.ok("File uploaded & saved successfully: " + response.getFileUrl());
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Upload failed");
         }
@@ -123,10 +123,6 @@ public class ProfileController {
     public ResponseEntity<List<Photo>> getUploadedPhotos(@PathVariable Long profileId) {
         List<Photo> photos = photoRepository.findByProfileId(profileId);
         return ResponseEntity.ok(photos);
-//        List<String> filenames = photos.stream()
-//                .map(Photo::getFilename)
-//                .collect(Collectors.toList());
-//        return ResponseEntity.ok(filenames);
     }
 
     @PutMapping("/gallery/accept/{photoId}")
@@ -170,26 +166,29 @@ public class ProfileController {
 
     @GetMapping("/files/{filename:.+}")
     public ResponseEntity<Resource> getFile(@PathVariable String filename) {
+        System.out.println("Fetching image: " + filename);
         try {
-            Path filePath = Paths.get("C:/uploaded-files/").resolve(filename).normalize();
-            Resource resource = new UrlResource(filePath.toUri());
+            S3Object s3Object = s3Service.getFileFromS3(filename);
 
-            if (!resource.exists() || !resource.isReadable()) {
+            if (s3Object == null) {
+                System.out.println("Image not found in S3: " + filename);
                 return ResponseEntity.notFound().build();
             }
 
-            // Handle .webp content-type
-            String contentType = Files.probeContentType(filePath);
+            InputStream inputStream = s3Object.getObjectContent();
+            Resource resource = new InputStreamResource(inputStream);
+
+            String contentType = s3Object.getObjectMetadata().getContentType();
             if (contentType == null && filename.toLowerCase().endsWith(".webp")) {
                 contentType = "image/webp";
             }
-
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(contentType != null ? contentType : "application/octet-stream"))
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
                     .body(resource);
 
         } catch (Exception ex) {
+            ex.printStackTrace();
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -204,19 +203,11 @@ public class ProfileController {
                 return ResponseEntity.badRequest().body("Invalid file type. Only videos are allowed.");
             }
 
-            String uploadDir = "C:/uploaded-videos/";
-            File directory = new File(uploadDir);
-            if (!directory.exists()) {
-                directory.mkdirs();
-            }
-
-            String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-            Path filePath = Paths.get(uploadDir + fileName);
-            Files.write(filePath, file.getBytes());
+            S3UploadResponse response = s3Service.uploadToS3(file);
 
             Video video = new Video();
-            video.setFilename(fileName);
-            video.setPath(filePath.toString());
+            video.setFilename(response.getFilename());
+            video.setPath(response.getFileUrl());
             video.setUserId(userId);
             Profile profile = profileRepository.findById(profileId)
                     .orElseThrow(() -> new RuntimeException("Profile not found"));
@@ -226,7 +217,7 @@ public class ProfileController {
             video.setCreatedDate(new Date());
             videoRepository.save(video);
 
-            return ResponseEntity.ok("Video uploaded successfully: " + fileName);
+            return ResponseEntity.ok("Video uploaded successfully: " + response.getFileUrl());
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Video upload failed");
         }
@@ -291,29 +282,40 @@ public class ProfileController {
 
     @GetMapping("/videoFiles/{filename:.+}")
     public ResponseEntity<Resource> getVideoFile(@PathVariable String filename) {
+        System.out.println("Fetching video: " + filename);
         try {
-            Path filePath = Paths.get("C:/uploaded-videos/").resolve(filename).normalize();
-            Resource resource = new UrlResource(filePath.toUri());
+            S3Object s3Object = s3Service.getFileFromS3(filename);
 
-            if (!resource.exists() || !resource.isReadable()) {
+            if (s3Object == null) {
+                System.out.println("Video not found in S3: " + filename);
                 return ResponseEntity.notFound().build();
             }
 
-            // Handle .webp content-type
-            String contentType = Files.probeContentType(filePath);
-            if (contentType == null && filename.toLowerCase().endsWith(".webp")) {
-                contentType = "image/webp";
+            InputStream inputStream = s3Object.getObjectContent();
+            Resource resource = new InputStreamResource(inputStream);
+
+            String contentType = s3Object.getObjectMetadata().getContentType();
+
+            // Default content type fallback
+            if (contentType == null) {
+                if (filename.toLowerCase().endsWith(".mp4")) {
+                    contentType = "video/mp4";
+                } else {
+                    contentType = "application/octet-stream";
+                }
             }
 
             return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(contentType != null ? contentType : "application/octet-stream"))
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
                     .body(resource);
 
         } catch (Exception ex) {
+            ex.printStackTrace();
             return ResponseEntity.internalServerError().build();
         }
     }
+
 
     @PostMapping("/search")
     public ResponseEntity<List<ProfileDTO>> searchProfiles(@RequestBody SearchRequest request) {
